@@ -130,7 +130,7 @@ public class Minecraft {
 
 			}
 		}
-		use();
+		use(Thread.currentThread());
 		if (classLoader.findResource("net/minecraft/client/Minecraft.class") != null)
 			mainClass = classLoader.loadClass("net.minecraft.client.Minecraft");
 		else if (classLoader.findResource("net/minecraft/server/MinecraftServer.class") != null)
@@ -209,10 +209,6 @@ public class Minecraft {
 		return tempOutput;
 	}
 	
-	public URL getPath() {
-		return urlToJar;
-	}
-	
 	private Stack<URL> getLibraries(File path) {
 		return getLibraries(path, new Stack<URL>());
 	}
@@ -247,7 +243,7 @@ public class Minecraft {
 		minecraftDirectory = (mcDir != null) ? mcDir : new File(homeDirectory, ".minecraft");
 	}
 	
-	public void use() {
+	public void use(Thread thread) {
 		File librariesPath = new File(minecraftDirectory + "/libraries/");
 		if (librariesPath.exists()) {
 			Stack<URL> libraries = getLibraries(librariesPath);
@@ -258,7 +254,7 @@ public class Minecraft {
 		} else {
 			classLoader = new URLClassLoader(new URL[] { urlToJar });
 		}
-		Thread.currentThread().setContextClassLoader(classLoader);
+		thread.setContextClassLoader(classLoader);
 	}
 
 	public MinecraftClass getClassByName(String name) {

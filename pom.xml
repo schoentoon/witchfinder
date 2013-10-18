@@ -27,7 +27,7 @@
                     </descriptorRefs>
                     <archive>
                         <manifest>
-                            <mainClass>witchfinder.Main</mainClass>
+                            <mainClass>witchfinder.WitchFinderV3</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

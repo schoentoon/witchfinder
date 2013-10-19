@@ -13,10 +13,10 @@ public class WitchFinderThread extends Thread {
 	protected final long endSeed;
 	private final int radius;
 	private final Random rnd = new Random();
-	private static Minecraft minecraft;
 
 	protected long currentSeed;
 
+	private static Minecraft minecraft = null;
 	public static MinecraftClass genLayerClass = null;
 	public static MinecraftObject defaultGeneration = null;
 	
@@ -29,7 +29,8 @@ public class WitchFinderThread extends Thread {
 		this.startSeed = startSeed;
 		this.endSeed = endSeed;
 		this.radius = radius / 32;
-		this.minecraft = new Minecraft(jarFile);
+		if (minecraft == null)
+			minecraft = new Minecraft(jarFile);
 		if (genLayerClass == null)
 			genLayerClass = minecraft.getClassByName("GenLayer");
 		if (defaultGeneration == null)

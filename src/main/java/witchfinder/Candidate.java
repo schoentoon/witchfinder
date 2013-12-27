@@ -47,25 +47,51 @@ public class Candidate {
 	
 	protected int[] witchSpawningArea;
 	protected int totalWitchSpawningArea;
+
+	public Candidate(Minecraft minecraft) {
+		this.minecraft = minecraft;
+		this.hutCount = 0;
+		this.xpos = new int[4];
+		this.zpos = new int[4];
+		this.biomeInts = new int[4][];
+		this.biomeIds = new int[4];
+		this.validBiomes = new boolean[4];
+		this.type = new int[4];
+		this.distanceToCenter = new double[4];
+		this.witchSpawningArea = new int[4];
+	}
 	
-	public Candidate(long seed, int[] x, int[] z, int[] xrand, int[] zrand, int[] structureOrientations, Minecraft minecraft) {
+	public void init(long seed, int x0, int x1, int x2, int x3, int z0, int z1, int z2, int z3, int[] xrand, int[] zrand, int[] structureOrientations) {
 		this.seed = seed;
 		this.xrand = xrand;
 		this.zrand = zrand;
 		this.structureOrientations = structureOrientations;
-		this.minecraft = minecraft;
+		this.hutCount = 0;
 		
-		xpos = new int[4];
-		zpos = new int[4];
-		
-		xpos[TOPRIGHT] = 512 * x[TOPRIGHT] + 16 * xrand[TOPRIGHT];
-		zpos[TOPRIGHT] = 512 * z[TOPRIGHT] + 16 * zrand[TOPRIGHT];
-		xpos[BOTTOMRIGHT] = 512 * x[BOTTOMRIGHT] + 16 * xrand[BOTTOMRIGHT];
-		zpos[BOTTOMRIGHT] = 512 * z[BOTTOMRIGHT] + 16 * zrand[BOTTOMRIGHT];
-		xpos[BOTTOMLEFT] = 512 * x[BOTTOMLEFT] + 16 * xrand[BOTTOMLEFT];
-		zpos[BOTTOMLEFT] = 512 * z[BOTTOMLEFT] + 16 * zrand[BOTTOMLEFT];
-		xpos[TOPLEFT] = 512 * x[TOPLEFT] + 16 * xrand[TOPLEFT];
-		zpos[TOPLEFT] = 512 * z[TOPLEFT] + 16 * zrand[TOPLEFT];
+		xpos[TOPRIGHT] = 512 * x0 + 16 * xrand[TOPRIGHT];
+		zpos[TOPRIGHT] = 512 * z0 + 16 * zrand[TOPRIGHT];
+		xpos[BOTTOMRIGHT] = 512 * x1 + 16 * xrand[BOTTOMRIGHT];
+		zpos[BOTTOMRIGHT] = 512 * z1 + 16 * zrand[BOTTOMRIGHT];
+		xpos[BOTTOMLEFT] = 512 * x2 + 16 * xrand[BOTTOMLEFT];
+		zpos[BOTTOMLEFT] = 512 * z2 + 16 * zrand[BOTTOMLEFT];
+		xpos[TOPLEFT] = 512 * x3 + 16 * xrand[TOPLEFT];
+		zpos[TOPLEFT] = 512 * z3 + 16 * zrand[TOPLEFT];
+		this.validBiomes[0] = false;
+		this.validBiomes[1] = false;
+		this.validBiomes[2] = false;
+		this.validBiomes[3] = false;
+		this.type[0] = 0;
+		this.type[1] = 0;
+		this.type[2] = 0;
+		this.type[3] = 0;
+		this.distanceToCenter[0] = 0;
+		this.distanceToCenter[1] = 0;
+		this.distanceToCenter[2] = 0;
+		this.distanceToCenter[3] = 0;
+		this.witchSpawningArea[0] = 0;
+		this.witchSpawningArea[1] = 0;
+		this.witchSpawningArea[2] = 0;
+		this.witchSpawningArea[3] = 0;
 	}
 
 	private static final String GET_INTS = "getInts";
@@ -77,14 +103,11 @@ public class Candidate {
 
 		IntCache.resetIntCache();
 
-		biomeInts = new int[4][];
 		// get ints, use a 24 x24 array so that it is large enough to hold a 21x21 desert temple
 		biomeInts[TOPRIGHT] = (int[]) biomeIndexLayer.callFunction(GET_INTS, xpos[TOPRIGHT],zpos[TOPRIGHT],24,24);
 		biomeInts[BOTTOMRIGHT] = (int[]) biomeIndexLayer.callFunction(GET_INTS, xpos[BOTTOMRIGHT],zpos[BOTTOMRIGHT],24,24);
 		biomeInts[BOTTOMLEFT] = (int[]) biomeIndexLayer.callFunction(GET_INTS, xpos[BOTTOMLEFT],zpos[BOTTOMLEFT],24,24);
 		biomeInts[TOPLEFT] = (int[]) biomeIndexLayer.callFunction(GET_INTS, xpos[TOPLEFT],zpos[TOPLEFT],24,24);
-		
-		biomeIds = new int[4];
 		
 		/*
 		 * There is some wierdness in the minecraft code here, as it seems like it looks
@@ -107,22 +130,25 @@ public class Candidate {
 			BiomeGenBase.biomeList[biomeInts[BOTTOMLEFT][198]] : BiomeGenBase.biomeList[biomeInts[BOTTOMLEFT][152]];
 		biomeIds[TOPLEFT] = structureOrientations[TOPLEFT] == NORTHSOUTHORIENTATION ?
 				BiomeGenBase.biomeList[biomeInts[TOPLEFT][198]] : BiomeGenBase.biomeList[biomeInts[TOPLEFT][152]];
-
-		validBiomes = new boolean[4];
-		type = new int[4];
 		
 		switch(biomeIds[TOPRIGHT]) {
 		case BiomeGenBase.desertID:
 		case BiomeGenBase.desertHillsID:
+		case BiomeGenBase.desertHillsM:
+		case BiomeGenBase.desertM:
 			validBiomes[TOPRIGHT] = true;
 			type[TOPRIGHT] = DESERTTEMPLE;
 			break;
 		case BiomeGenBase.jungleID:
 		case BiomeGenBase.jungleHillsID:
+		case BiomeGenBase.jungleEdge:
+		case BiomeGenBase.jungleEdgeM:
+		case BiomeGenBase.jungleM:
 			validBiomes[TOPRIGHT] = true;
 			type[TOPRIGHT] = JUNGLETEMPLE;
 			break;
 		case BiomeGenBase.swamplandID:
+		case BiomeGenBase.swamplandM:
 			validBiomes[TOPRIGHT] = true;
 			type[TOPRIGHT] = HUT;
 			hutCount++;
@@ -132,15 +158,21 @@ public class Candidate {
 		switch(biomeIds[BOTTOMRIGHT]) {
 		case BiomeGenBase.desertID:
 		case BiomeGenBase.desertHillsID:
+		case BiomeGenBase.desertHillsM:
+		case BiomeGenBase.desertM:
 			validBiomes[BOTTOMRIGHT] = true;
 			type[BOTTOMRIGHT] = DESERTTEMPLE;
 			break;
 		case BiomeGenBase.jungleID:
 		case BiomeGenBase.jungleHillsID:
+		case BiomeGenBase.jungleEdge:
+		case BiomeGenBase.jungleEdgeM:
+		case BiomeGenBase.jungleM:
 			validBiomes[BOTTOMRIGHT] = true;
 			type[BOTTOMRIGHT] = JUNGLETEMPLE;
 			break;
 		case BiomeGenBase.swamplandID:
+		case BiomeGenBase.swamplandM:
 			validBiomes[BOTTOMRIGHT] = true;
 			type[BOTTOMRIGHT] = HUT;
 			hutCount++;
@@ -150,15 +182,21 @@ public class Candidate {
 		switch(biomeIds[BOTTOMLEFT]) {
 		case BiomeGenBase.desertID:
 		case BiomeGenBase.desertHillsID:
+		case BiomeGenBase.desertHillsM:
+		case BiomeGenBase.desertM:
 			validBiomes[BOTTOMLEFT] = true;
 			type[BOTTOMLEFT] = DESERTTEMPLE;
 			break;
 		case BiomeGenBase.jungleID:
 		case BiomeGenBase.jungleHillsID:
+		case BiomeGenBase.jungleEdge:
+		case BiomeGenBase.jungleEdgeM:
+		case BiomeGenBase.jungleM:
 			validBiomes[BOTTOMLEFT] = true;
 			type[BOTTOMLEFT] = JUNGLETEMPLE;
 			break;
 		case BiomeGenBase.swamplandID:
+		case BiomeGenBase.swamplandM:
 			validBiomes[BOTTOMLEFT] = true;
 			type[BOTTOMLEFT] = HUT;
 			hutCount++;
@@ -177,6 +215,7 @@ public class Candidate {
 			type[TOPLEFT] = JUNGLETEMPLE;
 			break;
 		case BiomeGenBase.swamplandID:
+		case BiomeGenBase.swamplandM:
 			validBiomes[TOPLEFT] = true;
 			type[TOPLEFT] = HUT;
 			hutCount++;
@@ -228,8 +267,6 @@ public class Candidate {
 		xcenter = minx + (maxx - minx) /2;
 		zcenter = minz + (maxz - minz) /2;
 		
-		distanceToCenter = new double[4];
-		
 		int dx=xcenter - xpos[TOPRIGHT];
 		int dz=zpos[TOPRIGHT] - zcenter;
 		distanceToCenter[TOPRIGHT] = Math.sqrt(dx*dx + dz*dz);
@@ -255,8 +292,6 @@ public class Candidate {
 	}
 	
 	public int calculateWitchSpawnableArea() {
-		witchSpawningArea = new int[4];
-		
 		witchSpawningArea[TOPRIGHT] = calculateWitchSpawnableArea2(xpos[TOPRIGHT], zpos[TOPRIGHT], 
 			type[TOPRIGHT], structureOrientations[TOPRIGHT], biomeInts[TOPRIGHT]);
 		witchSpawningArea[BOTTOMRIGHT] = calculateWitchSpawnableArea2(xpos[BOTTOMRIGHT], zpos[BOTTOMRIGHT], 
@@ -355,5 +390,18 @@ public class Candidate {
 		
 		return sb.toString();
 	}
-	
+
+	public void free() {
+		xpos = null;
+		zpos = null;
+		xrand = null;
+		zrand = null;
+		structureOrientations = null;
+		distanceToCenter = null;
+		biomeInts = null;
+		biomeIds = null;
+		validBiomes = null;
+		type = null;
+		witchSpawningArea = null;
+	}
 }

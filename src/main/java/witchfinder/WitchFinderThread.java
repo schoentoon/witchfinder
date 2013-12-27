@@ -108,7 +108,7 @@ public class WitchFinderThread extends Thread {
 		int[] zrand = new int[4];
 		int[] structureOrientation = new int[4];
 		int xr, zr;
-		Candidate candidate;
+		Candidate candidate = new Candidate(minecraft);
 		for(currentSeed = startSeed; currentSeed <= endSeed; currentSeed++){
 			for(int x=-radius; x<radius - 1; x+=2) {	
 				
@@ -133,9 +133,8 @@ public class WitchFinderThread extends Thread {
 								
 								xrand[Candidate.BOTTOMRIGHT] = xr; 
 								zrand[Candidate.BOTTOMRIGHT] = zr;
-								
-								candidate = new Candidate(currentSeed, new int[] { x, x, x-1, x-1 }, new int[] { z-1, z, z, z-1 }, 
-									xrand, zrand, structureOrientation, minecraft);
+
+								candidate.init(currentSeed, x, x, x-1, x-1, z-1, z, z, z-1, xrand, zrand, structureOrientation);
 
 								candidate.initializeBiomeValues();
 								if ( candidate.isQuadInAValidBiome() && candidate.calculateMaxDistance() < 128 &&
@@ -157,9 +156,8 @@ public class WitchFinderThread extends Thread {
 								
 								xrand[Candidate.TOPRIGHT] = xr; 
 								zrand[Candidate.TOPRIGHT] = zr;
-								
-								candidate = new Candidate(currentSeed, new int[] { x, x, x-1, x-1 }, new int[] { z, z+1, z+1, z }, 
-										xrand, zrand, structureOrientation, minecraft);
+
+								candidate.init(currentSeed, x, x, x-1, x-1, z, z+1, z+1, z, xrand, zrand, structureOrientation);
 								
 								candidate.initializeBiomeValues();
 								if ( candidate.isQuadInAValidBiome() && candidate.calculateMaxDistance() < 128 &&
@@ -185,9 +183,8 @@ public class WitchFinderThread extends Thread {
 								
 								xrand[Candidate.BOTTOMLEFT] = xr; 
 								zrand[Candidate.BOTTOMLEFT] = zr;
-								
-								candidate = new Candidate(currentSeed, new int[] { x+1, x+1, x, x }, new int[] { z-1, z, z, z-1 }, 
-										xrand, zrand, structureOrientation, minecraft);
+
+								candidate.init(currentSeed, x+1, x+1, x, x, z-1, z, z, z-1, xrand, zrand, structureOrientation);
 	
 								candidate.initializeBiomeValues();
 								if ( candidate.isQuadInAValidBiome() && candidate.calculateMaxDistance() < 128 &&
@@ -208,9 +205,8 @@ public class WitchFinderThread extends Thread {
 								
 								xrand[Candidate.TOPLEFT] = xr; 
 								zrand[Candidate.TOPLEFT] = zr;
-								
-								candidate = new Candidate(currentSeed, new int[] { x+1, x+1, x, x }, new int[] { z, z+1, z+1, z }, 
-										xrand, zrand, structureOrientation, minecraft);
+
+								candidate.init(currentSeed, x+1, x+1, x, x, z, z+1, z+1, z, xrand, zrand, structureOrientation);
 	
 								candidate.initializeBiomeValues();
 								if ( candidate.isQuadInAValidBiome() && candidate.calculateMaxDistance() < 128 &&

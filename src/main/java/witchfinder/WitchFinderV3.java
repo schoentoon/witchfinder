@@ -24,6 +24,8 @@ public class WitchFinderV3 {
 	
 	protected String startMessage;
 	private PrintStream out = System.out;
+	private PrintStream contFile = System.out;
+	private boolean tostderr = false;
 
 	private WitchFinderV3() {
 		seedsToCheck = 1000000000; //default is 1 billion
@@ -37,7 +39,7 @@ public class WitchFinderV3 {
 		// calculate startTime
 		long startTime = System.currentTimeMillis();
 		
-		System.out.println(startMessage + (seedsToCheck / 1000000) +
+		contFile.println(startMessage + (seedsToCheck / 1000000) +
 				" million seeds (" + startSeed + "-" + endSeed + ") with quality setting 0 " +
 				" with a radius of " + radius + " chunks on " + numberOfThreads + " threads:" + System.lineSeparator());
 		
@@ -63,7 +65,7 @@ public class WitchFinderV3 {
 		/*
 		 * Initialize Update Thread, and start it
 		 */
-		UpdateThread updateThread = new UpdateThread(threads, startTime, seedsToCheck);
+		UpdateThread updateThread = new UpdateThread(threads, startTime, seedsToCheck, contFile);
 				
 		updateThread.setDaemon(true);
 		updateThread.start();
@@ -80,19 +82,38 @@ public class WitchFinderV3 {
 				e.printStackTrace();
 			}
 		}
-		
-		//calculate passed time
-		int calcTime = (int)(System.currentTimeMillis() - startTime);
-		int seconds = calcTime / 1000;
-		int minutes = seconds / 60;
-		int hours = minutes / 60;
-		seconds -= minutes * 60;
-		minutes -= hours * 60;
-		
-		System.out.println("found " + hutcount + " witch huts in total");
-		System.out.format("calculation took %02d:%02d:%02d (%.3f ns per seed)%n%n", hours, minutes, seconds,
-				((double) calcTime * 1000000 / seedsToCheck), ((double) calcTime * 1000000000 / (seedsToCheck * radius * radius * 4)));
+		if (threads[0].currentSeed != threads[0].endSeed) {
+			try {
+				String raw = "";
+				for (int i = 0; i < threads.length; i++)
+					raw += (i > 0 ? " " : "") + threads[i].currentSeed + " " + threads[i].endSeed;
+				System.err.println(raw);
+				synchronized (continueFile) {
+					PrintStream stream = new PrintStream(new FileOutputStream(continueFile, true), true);
+					stream.write(raw.getBytes());
+					stream.write('\n');
+					stream.close();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			System.exit(1);
+		} else {
+			//calculate passed time
+			int calcTime = (int)(System.currentTimeMillis() - startTime);
+			int seconds = calcTime / 1000;
+			int minutes = seconds / 60;
+			int hours = minutes / 60;
+			seconds -= minutes * 60;
+			minutes -= hours * 60;
+
+			contFile.println("found " + hutcount + " witch huts in total");
+			contFile.format("calculation took %02d:%02d:%02d (%.3f ns per seed)%n%n", hours, minutes, seconds,
+					((double) calcTime * 1000000 / seedsToCheck), ((double) calcTime * 1000000000 / (seedsToCheck * radius * radius * 4)));
+		}
 	}
+
+	public static final File continueFile = new File("continue.txt");
 	
 	public static void main(String[] args) throws Exception {
 		Options opts = new Options();
@@ -106,9 +127,11 @@ public class WitchFinderV3 {
 				.hasArgs(1)
 				.withDescription("Output file the seeds to")
 				.create('o'));
+		opts.addOption(OptionBuilder.withDescription("Always print the quad witch hut seeds to stderr")
+				.create("seedstostderr"));
 		opts.addOption(OptionBuilder.withLongOpt("continue")
 				.hasArgs(1)
-				.withDescription("Continue file")
+				.withDescription("Continue file, if you use --startseed as well I'll write my update here (includes continue data)")
 				.create('c'));
 		opts.addOption(OptionBuilder.withLongOpt("startseed")
 				.hasArgs(1)
@@ -124,7 +147,7 @@ public class WitchFinderV3 {
 				.create('m'));
 		opts.addOption(OptionBuilder.withLongOpt("radius")
 				.hasArgs(1)
-				.withDescription("The radius")
+				.withDescription("The radius, defaults to 128")
 				.create('r'));
 		CommandLineParser parser = new PosixParser();
 		CommandLine line = parser.parse(opts, args);
@@ -138,29 +161,41 @@ public class WitchFinderV3 {
 			System.exit(1);
 		}
 		WitchFinderV3 wf = new WitchFinderV3();
+		if (line.hasOption('T'))
+			wf.numberOfThreads = Integer.parseInt(line.getOptionValue('T'));
 		if (line.hasOption('s')) {
 			wf.startSeed = Long.parseLong(line.getOptionValue('s')) * 1000000;
 			if (line.hasOption('m'))
 				wf.seedsToCheck = Long.parseLong(line.getOptionValue('m')) * 1000000;
+			if (line.hasOption('c'))
+				wf.contFile = new PrintStream(new FileOutputStream(new File(line.getOptionValue('c'))));
 		} else if (line.hasOption('c')) {
-			BufferedReader contReader = new BufferedReader(new FileReader(new File(line.getOptionValue('c'))));
-			wf.contSeeds = contReader.readLine().split(" ");
-			contReader.close();
-			int i = 0;
-			wf.seedsToCheck = 0;
-			while (i < wf.contSeeds.length)  {
-				wf.seedsToCheck += -Long.parseLong(wf.contSeeds[i++]) + Long.parseLong(wf.contSeeds[i++]);
+			try {
+				BufferedReader contReader = new BufferedReader(new FileReader(new File(line.getOptionValue('c'))));
+				String raw_line = null;
+				do {
+					raw_line = contReader.readLine();
+					if (raw_line != null) {
+						String[] split = raw_line.split(" ");
+						if (split.length == (wf.numberOfThreads * 2))
+							wf.contSeeds = split;
+					}
+				} while (raw_line != null);
+				contReader.close();
+				int i = 0;
+				wf.seedsToCheck = 0;
+				while (i < wf.contSeeds.length)
+					wf.seedsToCheck += -Long.parseLong(wf.contSeeds[i++]) + Long.parseLong(wf.contSeeds[i++]);
+			} catch (NullPointerException e) {
+				System.err.println("Well shit..");
+				System.exit(0);
 			}
-		} else {
+		} else
 			wf.startSeed = new Random().nextLong();
-		}
-		if (line.hasOption('T'))
-			wf.numberOfThreads = Integer.parseInt(line.getOptionValue('T'));
 		if (line.hasOption('r'))
 			wf.radius = Integer.parseInt(line.getOptionValue('r'));
-		if (line.hasOption('o')) {
+		if (line.hasOption('o'))
 			wf.out = new PrintStream(new FileOutputStream(line.getOptionValue('o'), true),true);
-		}
 		if(wf.contSeeds != null) {
 			wf.endSeed = Long.parseLong(wf.contSeeds[wf.contSeeds.length-1]);
 			wf.startMessage = "continuing to analyze the remaining ";
@@ -168,6 +203,7 @@ public class WitchFinderV3 {
 			wf.endSeed = wf.startSeed + wf.seedsToCheck - 1;
 			wf.startMessage =  "checking ";
 		}
+		wf.tostderr = line.hasOption("seedstostderr");
 		wf.process(new File(line.getOptionValue('j')));
 	}
 	
@@ -179,5 +215,9 @@ public class WitchFinderV3 {
  		if(candidate.hutCount == 3 && candidate.totalWitchSpawningArea > 504 ) 
  			out.println("This is a really good triple witch hut with a temple part way in a swamp! Please send the candidate above to BBInME, JL2579 or TheCodeRaider!"); //;D
  		out.println();
+		if (tostderr) {
+			System.err.format("%tT: %s", new Date(), candidate);
+			System.err.println();
+		}
  	}
 }

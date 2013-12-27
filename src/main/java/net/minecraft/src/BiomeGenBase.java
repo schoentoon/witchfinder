@@ -1,6 +1,6 @@
 package net.minecraft.src;
 
-public abstract class BiomeGenBase{
+public abstract class BiomeGenBase {
     public static final int[] biomeList = new int[256];
     public static final int oceanID = 0;
     public static final int plainsID = 1;
@@ -25,6 +25,64 @@ public abstract class BiomeGenBase{
     public static final int extremeHillsEdgeID = 20;
     public static final int jungleID = 21;
     public static final int jungleHillsID = 22;
+
+	public static final int jungleEdge           = 23;
+	public static final int deepOcean            = 24;
+	public static final int stoneBeach           = 25;
+	public static final int coldBeach            = 26;
+	public static final int birchForest          = 27;
+	public static final int birchForestHills     = 28;
+	public static final int roofedForest         = 29;
+	public static final int coldTaiga            = 30;
+	public static final int coldTaigaHills       = 31;
+	public static final int megaTaiga            = 32;
+	public static final int megaTaigaHills       = 33;
+	public static final int extremeHillsPlus     = 34;
+	public static final int savanna              = 35;
+	public static final int savannaPlateau       = 36;
+	public static final int mesa                 = 37;
+	public static final int mesaPlateauF         = 38;
+	public static final int mesaPlateau          = 39;
+	public static final int oceanM               = 128;
+	public static final int sunflowerPlains      = 129;
+	public static final int desertM              = 130;
+	public static final int extremeHillsM        = 131;
+	public static final int flowerForest         = 132;
+	public static final int taigaM               = 133;
+	public static final int swamplandM           = 134;
+	public static final int riverM               = 135;
+	public static final int hellM                = 136;
+	public static final int skyM                 = 137;
+	public static final int frozenOceanM         = 138;
+	public static final int frozenRiverM         = 139;
+	public static final int icePlainsSpikes      = 140;
+	public static final int iceMountainsM        = 141;
+	public static final int mushroomIslandM      = 142;
+	public static final int mushroomIslandShoreM = 143;
+	public static final int beachM               = 144;
+	public static final int desertHillsM         = 145;
+	public static final int forestHillsM         = 146;
+	public static final int taigaHillsM          = 147;
+	public static final int extremeHillsEdgeM    = 148;
+	public static final int jungleM              = 149;
+	public static final int jungleHillsM         = 150;
+	public static final int jungleEdgeM          = 151;
+	public static final int deepOceanM           = 152;
+	public static final int stoneBeachM          = 153;
+	public static final int coldBeachM           = 154;
+	public static final int birchForestM         = 155;
+	public static final int birchForestHillsM    = 156;
+	public static final int roofedForestM        = 157;
+	public static final int coldTaigaM           = 158;
+	public static final int coldTaigaHillsM      = 159;
+	public static final int megaSpruceTaiga      = 160;
+	public static final int megaSpurceTaigaHills = 161;
+	public static final int extremeHillsPlusM    = 162;
+	public static final int savannaM             = 163;
+	public static final int savannaPlateauM      = 164;
+	public static final int mesaBryce            = 165;
+	public static final int mesaPlateauFM        = 167;
+	public static final int mesaPlateauM         = 168;
     
     static{
     	for(int i=0; i<biomeList.length; i++) biomeList[i] = i;

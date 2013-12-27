@@ -10,3 +10,4 @@
 *.iws
 .idea/
 target/
+*.txt
